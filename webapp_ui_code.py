@@ -12,7 +12,7 @@ def ui_and_transcribe(client,key_name = "uicode"):
         with open(font_path, "rb") as font_file:
             font_data = font_file.read()
             encoded_font = base64.b64encode(font_data).decode()
-        
+            
         st.markdown(
             f"""
             <style>
