@@ -9,9 +9,7 @@ import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import firestore
 from dotenv import load_dotenv
-import base64
-from PIL import Image
-from pathlib import Path
+import pyrebase
 
 #.envを呼び出せるようにする
 load_dotenv()
@@ -27,70 +25,59 @@ if not firebase_admin._apps:
 #firebaseクライアントを取得
 db = firestore.client()
 
+# Firebase Authentication用の設定
+firebaseConfig = {
+    "apiKey": os.getenv("FIREBASE_API_KEY"),
+    "authDomain": os.getenv("FIREBASE_AUTH_DOMAIN"),
+    "databaseURL": os.getenv("FIREBASE_DATABASE_URL"),
+    "projectId": os.getenv("FIREBASE_PROJECT_ID"),
+    "storageBucket": os.getenv("FIREBASE_STORAGE_BUCKET"),
+    "messagingSenderId": os.getenv("FIREBASE_MESSAGING_SENDER_ID"),
+    "appId": os.getenv("FIREBASE_APP_ID"),
+}
+firebase = pyrebase.initialize_app(firebaseConfig)
+auth = firebase.auth()
+
+
 api_key =os.getenv("OPENAI_API_KEY")
 client = OpenAI(api_key=api_key)
 
-#フォント変更
-def apply_custom_font():
-    font_path = "static/1.otf"
-    with open(font_path, "rb") as font_file:
-        font_data = font_file.read()
-        encoded_font = base64.b64encode(font_data).decode()
-    
-    st.markdown(
-        f"""
-        <style>
-        @font-face {{
-            font-family: 'CustomFont';
-            src: url(data:font/otf;base64,{encoded_font});
-        }}
-        * {{
-            font-family: 'CustomFont', sans-serif !important;
-        }}
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
-
-apply_custom_font()
-
-# 背景画像をBase64形式でエンコード
-def get_base64_encoded_image(image_path):
-    with open(image_path, "rb") as img_file:
-        return base64.b64encode(img_file.read()).decode()
-
-# CSSに背景画像を適用
-background_image_path = "background.png"  # ローカル画像のパス
-encoded_image = get_base64_encoded_image(background_image_path)
-
-screencast_bg_css = f"""
-<style>
-    [data-testid="stApp"] {{
-        background-image: url("data:image/jpeg;base64,{encoded_image}");
-        background-size: contain;
-        background-position: center;
-        background-repeat: no-repeat;
-        background-attachment: fixed;
-    }}
-</style>
-"""
-st.markdown(screencast_bg_css, unsafe_allow_html=True)
-
-# メッセージ枠のスタイルを変更するCSSを追加
-custom_style = """
-<style>
-    div[data-testid="stAlertContainer"] {
-        background-color: #fad67d; /* 背景色（薄いオレンジに変更） */ 
-        padding: 10px; /* 内側の余白 */
-        border-radius: 5px; /* 角を丸める */
-        textColor: #090547; # 紺色
-    }
-</style>
-"""
-st.markdown(custom_style, unsafe_allow_html=True)
-
 #ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
 #サイドバー　メニュー
+#初期化
+if "user" not in st.session_state:
+    st.session_state.user = None
+
+if not st.session_state.user:
+    st.sidebar.title("ログイン")
+
+    email = st.sidebar.text_input("メールアドレス")
+    password = st.sidebar.text_input("パスワード", type="password")
+
+    login_col,signup_col = st.sidebar.columns(2)
+
+    with login_col:
+        if st.button("ログインする"):
+            try:
+                user = auth.sign_in_with_email_and_password(email,password)
+                st.session_state.user = user
+                st.success("✅ ログイン成功しました！")
+                st.rerun() # ログイン後すぐ画面を更新
+            except Exception as e:
+                st.error(f"ログインに失敗しました：{e}")
+
+    with signup_col:
+        if st.button("新規登録する"):
+            try:
+                user = auth.create_user_with_email_and_password(email,password)
+                st.session_state.user = user
+                st.success("✅ 新規登録＆ログインに成功しました！")
+                st.rerun() # ログイン後すぐ画面を更新
+            except Exception as e:
+                st.error(f"新規登録に失敗しました：{e}")
+    st.stop() #ログインするまでこの先を実行しない
+
+
 st.sidebar.title("メニュー")
 mode = st.sidebar.selectbox(
     "操作を選んでください",
@@ -99,14 +86,7 @@ mode = st.sidebar.selectbox(
 
 if mode == "今日の記録を入力する":
 
-# タイトルと画像を横並びで両脇に配置
-    col1, col2 = st.columns([5, 1])  # タイトル5 : 右画像1
-
-    with col1:
-        st.title("今日も1日お疲れさまでした")  # 中央のタイトル
-
-    with col2:
-        st.image("dog.png", width=120)  # 右側の画像（幅50pxで小さく表示）
+    st.title("今日も1日お疲れさまでした")
 
     #ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
     #カレンダーで記録日の日付を入力させる

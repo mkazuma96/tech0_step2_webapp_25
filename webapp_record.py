@@ -21,9 +21,9 @@ def record_and_transcribe(client, key_name = "recorder_day"):
 
     if st.session_state.recording:
         day_contents = audio_recorder(
-            energy_threshold = (1000000000,0.0000000002), 
+            energy_threshold = 300,
             text="クリックして音声を録音しよう！",
-            pause_threshold= 0.5,
+            pause_threshold= 30,
             sample_rate = 48_000,
             key="recorder_day"
         )
