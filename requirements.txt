@@ -7,3 +7,4 @@ pyrebase4
 Pillow
 audio-recorder-streamlit
 google-cloud-storage
+gcloud
