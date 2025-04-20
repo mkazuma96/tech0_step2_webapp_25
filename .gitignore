@@ -1,0 +1,13 @@
+# Python関係
+__pycache__/
+*.pyc
+
+# 環境変数
+.env
+
+# Firebase秘密鍵
+*.json
+
+# OS依存ファイル
+.DS_Store
+Thumbs.db
