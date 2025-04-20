@@ -1,0 +1,6 @@
+[theme]
+base = "light" # アプリの基本テーマ
+primaryColor = "#ffa87d"  # 明るいオレンジ色
+backgroundColor = "#feffe6"  # 柔らかな黄色
+secondaryBackgroundColor = "#ffdb59"  # みかん色
+textColor = "#090547" # 紺色
