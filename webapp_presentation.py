@@ -5,11 +5,14 @@ from openai import OpenAI # openAIのchatGPTのAIを活用するための機能�
 import os # OSが持つ環境変数OPENAI_API_KEYにAPIを入力するためにosにアクセスするためのライブラリをインポート
 from webapp_record import record_and_transcribe
 from webapp_meal_photo import meal_and_transcribe
+from webapp_ui_code import ui_and_transcribe
 import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import firestore
 from dotenv import load_dotenv
 import pyrebase
+
+
 
 #.envを呼び出せるようにする
 load_dotenv()
@@ -43,7 +46,13 @@ api_key =os.getenv("OPENAI_API_KEY")
 client = OpenAI(api_key=api_key)
 
 #ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
-#サイドバー　メニュー
+###UI変更###
+#webapp_ui_codeの関数を呼び出し
+ui_and_transcribe(client)
+
+
+#ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
+###サイドバーメニュー###
 #初期化
 if "user" not in st.session_state:
     st.session_state.user = None
@@ -85,11 +94,18 @@ mode = st.sidebar.selectbox(
 )
 
 if mode == "今日の記録を入力する":
+    # タイトルと画像を横並びで両脇に配置
+    col1, col2 ,col3 = st.columns([1, 3, 1])  # 左画像1：タイトル5 : 右画像1
+    with col1:
+        st.image("dog.png", width=100)  # 右側の画像（小さく表示）
+    with col2:
+        st.title("今日も1日おつかれさま")  # 中央のタイトル
+    with col3:
+        st.image("dog2.png", width=100)  # 右側の画像（小さく表示）
 
-    st.title("今日も1日お疲れさまでした")
 
     #ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
-    #カレンダーで記録日の日付を入力させる
+    ###カレンダーで記録日の日付を入力させる###
     st.markdown("### 今日の日付を教えて下さい")
     selected_date = st.date_input(
         label="今日は",
@@ -99,8 +115,7 @@ if mode == "今日の記録を入力する":
         )
 
     #ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
-
-    #今日一日の点数をスライダーで選ばせる
+    ###今日一日の点数をスライダーで選ばせる###
     st.markdown("### 今日1日の点数を教えて下さい")
     day_value = st.slider(
         label="今日の点数は",
@@ -122,12 +137,12 @@ if mode == "今日の記録を入力する":
         pass
 
     #ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
-    #音声で今日1日の感想を録音してもらう
-    #webapp_record.pyのモジュールを呼び出す
+    ###音声で今日1日の感想を録音してもらう###
+    #webapp_record.pyの関数を呼び出し
     edited_day_text = record_and_transcribe(client)
 
     #ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
-    #今日歩いた歩数を入力させる
+    ###今日歩いた歩数を入力させる###
     st.markdown("### 今日の歩数を教えて下さい")
     step_count = st.number_input(
         label="今日の歩数は",
@@ -139,12 +154,12 @@ if mode == "今日の記録を入力する":
     )
 
     #ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
-    #食べたものの画像をアップロードさせる
-    #webapp_meal_photo.pyのモジュールを呼び出す
+    ###食べたものの画像をアップロードさせる###
+    #webapp_meal_photo.pyの関数を呼び出し
     st.session_state.meal_text = meal_and_transcribe(client)
 
     #ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
-    #Chatgptに情報を投げる
+    ###Chatgptに情報を渡す###
     prompt = f"""
     以下は、今日1日の健康状態に関する情報です。この情報を元に、プロの健康管理アドバイザーとして、まず入力内容のサマリを簡単に記載した上で、明日1日を健康的に過ごすためのアドバイスを日本語でください。
     - 日付:{selected_date.strftime('%Y年%m月%d日')}
@@ -174,7 +189,7 @@ if mode == "今日の記録を入力する":
 
 
     #ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
-    #記録を保存する
+    ###記録を保存する###
     if st.button("今日の記録を保存する"):
         db.collection("daily_logs").add({
             "date":selected_date.strftime('%Y年%m月%d日'),
