@@ -8,7 +8,11 @@ from webapp_meal_photo import meal_and_transcribe
 import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import firestore
+from dotenv import load_dotenv
 
+
+#.envを呼び出せるようにする
+load_dotenv()
 
 #Firebaseの初期化（1回だけ）
 if not firebase_admin._apps:
