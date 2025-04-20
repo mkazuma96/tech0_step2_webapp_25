@@ -6,3 +6,4 @@ python-dotenv
 pyrebase4
 Pillow
 audio-recorder-streamlit
+gcloud
