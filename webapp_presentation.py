@@ -9,6 +9,7 @@ import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import firestore
 from dotenv import load_dotenv
+import pyrebase
 
 
 #.envを呼び出せるようにする
@@ -25,11 +26,59 @@ if not firebase_admin._apps:
 #firebaseクライアントを取得
 db = firestore.client()
 
+# Firebase Authentication用の設定
+firebaseConfig = {
+    "apiKey": os.getenv("FIREBASE_API_KEY"),
+    "authDomain": os.getenv("FIREBASE_AUTH_DOMAIN"),
+    "databaseURL": os.getenv("FIREBASE_DATABASE_URL"),
+    "projectId": os.getenv("FIREBASE_PROJECT_ID"),
+    "storageBucket": os.getenv("FIREBASE_STORAGE_BUCKET"),
+    "messagingSenderId": os.getenv("FIREBASE_MESSAGING_SENDER_ID"),
+    "appId": os.getenv("FIREBASE_APP_ID"),
+}
+firebase = pyrebase.initialize_app(firebaseConfig)
+auth = firebase.auth()
+
+
 api_key =os.getenv("OPENAI_API_KEY")
 client = OpenAI(api_key=api_key)
-
 #ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
 #サイドバー　メニュー
+
+#初期化
+if "user" not in st.session_state:
+    st.session_state.user = None
+
+if not st.session_state.user:
+    st.sidebar.title("ログイン")
+
+    email = st.sidebar.text_input("メールアドレス")
+    password = st.sidebar.text_input("パスワード", type="password")
+
+    login_col,signup_col = st.sidebar.columns(2)
+
+    with login_col:
+        if st.button("ログインする"):
+            try:
+                user = auth.sign_in_with_email_and_password(email,password)
+                st.session_state.user = user
+                st.success("✅ ログイン成功しました！")
+                st.rerun() # ログイン後すぐ画面を更新
+            except Exception as e:
+                st.error(f"ログインに失敗しました：{e}")
+
+    with signup_col:
+        if st.button("新規登録する"):
+            try:
+                user = auth.create_user_with_email_and_password(email,password)
+                st.session_state.user = user
+                st.success("✅ 新規登録＆ログインに成功しました！")
+                st.rerun() # ログイン後すぐ画面を更新
+            except Exception as e:
+                st.error(f"新規登録に失敗しました：{e}")
+    st.stop() #ログインするまでこの先を実行しない
+
+
 st.sidebar.title("メニュー")
 mode = st.sidebar.selectbox(
     "操作を選んでください",
@@ -39,6 +88,11 @@ mode = st.sidebar.selectbox(
 if mode == "今日の記録を入力する":
 
     st.title("今日も1日お疲れさまでした！")
+
+#ログアウトボタンをつける
+
+
+
 
     #ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
     #カレンダーで記録日の日付を入力させる
