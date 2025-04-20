@@ -30,6 +30,30 @@ db = firestore.client()
 api_key =os.getenv("OPENAI_API_KEY")
 client = OpenAI(api_key=api_key)
 
+#フォント変更
+def apply_custom_font():
+    font_path = "static/1.otf"
+    with open(font_path, "rb") as font_file:
+        font_data = font_file.read()
+        encoded_font = base64.b64encode(font_data).decode()
+    
+    st.markdown(
+        f"""
+        <style>
+        @font-face {{
+            font-family: 'CustomFont';
+            src: url(data:font/otf;base64,{encoded_font});
+        }}
+        * {{
+            font-family: 'CustomFont', sans-serif !important;
+        }}
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
+apply_custom_font()
+
 # 背景画像をBase64形式でエンコード
 def get_base64_encoded_image(image_path):
     with open(image_path, "rb") as img_file:
