@@ -249,7 +249,7 @@ elif mode == "過去の記録を確認する":
         with st.container():
             st.subheader(f"🗓️ {data.get('date', '日付なし')}")
             st.write(f"🔵 スコア：{data.get('score', '不明')}点")
-            st.write(f"🗣️ 今日の感想：{data.get('st.session_state.edited_day_text', 'なし')}")
+            st.write(f"🗣️ 今日の感想：{data.get('emotion_text', 'なし')}")
             st.write(f"🚶‍♂️ 歩数：{data.get('steps', '不明')}歩")
             st.write(f"🍽️ 食事まとめ：{data.get('meal_summary', 'なし')}")
             st.write(f"💡 アドバイス：{data.get('advice', 'なし')}")
