@@ -23,7 +23,7 @@ FIREBASE_API_KEY = os.getenv("FIREBASE_API_KEY")
 #Firebaseの初期化（1回だけ）
 if not firebase_admin._apps:
     try: #まずSecret Managerから読み込む（クラウド環境用）
-        service_account_info = json.loads(st.secrets["FIREBASE_SERVICE_ACCOUNT"])
+        service_account_info = dict(st.secrets["FIREBASE_SERVICE_ACCOUNT"])
         cred = credentials.Certificate(service_account_info)
     except Exception:#ローカル環境用（サービスアカウントのJSONファイルパスから読む）
         cred_path = os.getenv("FIREBASE_CREDENTIAL_PATH")
