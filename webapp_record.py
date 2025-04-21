@@ -23,7 +23,7 @@ def record_and_transcribe(client, key_name = "recorder_day"):
         day_contents = audio_recorder(
             energy_threshold = 300,
             text="クリックして音声を録音しよう！",
-            pause_threshold= 30,
+            pause_threshold= 2,
             sample_rate = 48_000,
             key="recorder_day"
         )
