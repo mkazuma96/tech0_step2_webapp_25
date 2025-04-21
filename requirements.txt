@@ -3,8 +3,6 @@ requests
 openai
 firebase-admin
 python-dotenv
-pyrebase4
 Pillow
 audio-recorder-streamlit
 google-cloud-storage
-gcloud
