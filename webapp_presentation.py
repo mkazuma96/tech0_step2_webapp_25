@@ -10,23 +10,22 @@ import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import firestore
 from dotenv import load_dotenv
-import pyrebase
-
+from firebase_auth import firebase_login, firebase_signup
 
 
 #.envを呼び出せるようにする
 load_dotenv()
+
+
+FIREBASE_API_KEY = os.getenv("FIREBASE_API_KEY")
 
 #Firebaseの初期化（1回だけ）
 if not firebase_admin._apps:
     cred_path = os.getenv("FIREBASE_CREDENTIAL_PATH")
 #サービスアカウントキーの読み込み
     cred = credentials.Certificate(cred_path)
-#参考ページ：https://docs.kanaries.net/ja/topics/Streamlit/firebase-streamlit
     firebase_admin.initialize_app(cred)
 
-#firebaseクライアントを取得
-db = firestore.client()
 
 # Firebase Authentication用の設定
 firebaseConfig = {
@@ -38,54 +37,67 @@ firebaseConfig = {
     "messagingSenderId": os.getenv("FIREBASE_MESSAGING_SENDER_ID"),
     "appId": os.getenv("FIREBASE_APP_ID"),
 }
-firebase = pyrebase.initialize_app(firebaseConfig)
-auth = firebase.auth()
-
+db = firestore.client()
 
 api_key =os.getenv("OPENAI_API_KEY")
 client = OpenAI(api_key=api_key)
 
-#ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
+#ーーーーーーーーーーーーーーーーーーーーーーーーーー
 ###UI変更###
+#ーーーーーーーーーーーーーーーーーーーーーーーーーーー
 #webapp_ui_codeの関数を呼び出し
 ui_and_transcribe(client)
 
 
-#ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
-###サイドバーメニュー###
-#初期化
-if "user" not in st.session_state:
-    st.session_state.user = None
+#ーーーーーーーーーーーーーーーーーーーーーーーーーーー
+### ログイン/新規登録UI
+#ーーーーーーーーーーーーーーーーーーーーーーーーーーー
+def sidebar_auth():
+    st.sidebar.title("ログイン・新規登録")
 
-if not st.session_state.user:
-    st.sidebar.title("ログイン")
+    if "user" not in st.session_state:
+        st.session_state.user = None
 
-    email = st.sidebar.text_input("メールアドレス")
-    password = st.sidebar.text_input("パスワード", type="password")
+    if not st.session_state.user:
+        email = st.sidebar.text_input("メールアドレス")
+        password = st.sidebar.text_input("パスワード", type="password")
 
-    login_col,signup_col = st.sidebar.columns(2)
+        login_col,signup_col = st.sidebar.columns(2)
 
-    with login_col:
-        if st.button("ログインする"):
-            try:
-                user = auth.sign_in_with_email_and_password(email,password)
-                st.session_state.user = user
-                st.success("✅ ログイン成功しました！")
-                st.rerun() # ログイン後すぐ画面を更新
-            except Exception as e:
-                st.error(f"ログインに失敗しました：{e}")
+        with login_col:
+            if st.button("ログインする"):
+                if email and password:
+                    result = firebase_login(email,password)
+                    if "idToken" in result:
+                        st.session_state.user = result
+                        st.success("✅ ログイン成功しました！")
+                        st.rerun() # ログイン後すぐ画面を更新
+                    else:
+                        st.error(f"ログインに失敗しました:{result.get('error', {}).get('message', '不明なエラー')}")
+                else:
+                    st.warning("メールアドレスとパスワードを入力してください")
 
-    with signup_col:
-        if st.button("新規登録する"):
-            try:
-                user = auth.create_user_with_email_and_password(email,password)
-                st.session_state.user = user
-                st.success("✅ 新規登録＆ログインに成功しました！")
-                st.rerun() # ログイン後すぐ画面を更新
-            except Exception as e:
-                st.error(f"新規登録に失敗しました：{e}")
-    st.stop() #ログインするまでこの先を実行しない
+        with signup_col:
+            if st.button("新規登録する"):
+                if email and password:
+                    result = firebase_signup(email,password)
+                    if "idToken" in result:
+                        st.session_state.user = result
+                        st.success("✅ 新規登録＆ログインに成功しました！")
+                        st.rerun() # ログイン後すぐ画面を更新
+                    else:
+                        st.error(f"新規登録に失敗しました:{result.get('error', {}).get('message', '不明なエラー')}")
+                else:
+                    st.warning("メールアドレスとパスワードを入力してください。")
 
+        # ログイン・新規登録待ちの間はストップ
+        st.stop()
+    else:
+        st.sidebar.success(f"ようこそ！")
+
+# 呼び出し
+sidebar_auth()
+#ーーーーーーーーーーーーーーーーーーーーーーーーーーー
 
 st.sidebar.title("メニュー")
 mode = st.sidebar.selectbox(
@@ -104,8 +116,9 @@ if mode == "今日の記録を入力する":
         st.image("dog2.png", width=100)  # 右側の画像（小さく表示）
 
 
-    #ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
-    ###カレンダーで記録日の日付を入力させる###
+#ーーーーーーーーーーーーーーーーーーーーーーーーーーー
+###カレンダーで記録日の日付を入力させる###
+#ーーーーーーーーーーーーーーーーーーーーーーーーーーー
     st.markdown("### 今日の日付を教えて下さい")
     selected_date = st.date_input(
         label="今日は",
@@ -114,8 +127,9 @@ if mode == "今日の記録を入力する":
         max_value=date(2099,3,31),
         )
 
-    #ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
-    ###今日一日の点数をスライダーで選ばせる###
+#ーーーーーーーーーーーーーーーーーーーーーーーーーーー
+###今日一日の点数をスライダーで選ばせる###
+#ーーーーーーーーーーーーーーーーーーーーーーーーーーー
     st.markdown("### 今日1日の点数を教えて下さい")
     day_value = st.slider(
         label="今日の点数は",
@@ -136,13 +150,15 @@ if mode == "今日の記録を入力する":
     else:
         pass
 
-    #ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
-    ###音声で今日1日の感想を録音してもらう###
+#ーーーーーーーーーーーーーーーーーーーーーーーーーーー
+###音声で今日1日の感想を録音してもらう###
+#ーーーーーーーーーーーーーーーーーーーーーーーーーーー
     #webapp_record.pyの関数を呼び出し
     edited_day_text = record_and_transcribe(client)
 
-    #ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
+#ーーーーーーーーーーーーーーーーーーーーーーーーーーー
     ###今日歩いた歩数を入力させる###
+#ーーーーーーーーーーーーーーーーーーーーーーーーーーー
     st.markdown("### 今日の歩数を教えて下さい")
     step_count = st.number_input(
         label="今日の歩数は",
@@ -153,13 +169,15 @@ if mode == "今日の記録を入力する":
         format="%d"
     )
 
-    #ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
+#ーーーーーーーーーーーーーーーーーーーーーーーーーーー
     ###食べたものの画像をアップロードさせる###
+#ーーーーーーーーーーーーーーーーーーーーーーーーーーー
     #webapp_meal_photo.pyの関数を呼び出し
     st.session_state.meal_text = meal_and_transcribe(client)
 
-    #ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
+#ーーーーーーーーーーーーーーーーーーーーーーーーー
     ###Chatgptに情報を渡す###
+#ーーーーーーーーーーーーーーーーーーーーーーーーーーー
     prompt = f"""
     以下は、今日1日の健康状態に関する情報です。この情報を元に、プロの健康管理アドバイザーとして、まず入力内容のサマリを簡単に記載した上で、明日1日を健康的に過ごすためのアドバイスを日本語でください。
     - 日付:{selected_date.strftime('%Y年%m月%d日')}
@@ -188,8 +206,9 @@ if mode == "今日の記録を入力する":
         st.write(st.session_state.advice)
 
 
-    #ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
+#ーーーーーーーーーーーーーーーーーーーーーーーーーーー
     ###記録を保存する###
+#ーーーーーーーーーーーーーーーーーーーーーーーーーーー
     if st.button("今日の記録を保存する"):
         db.collection("daily_logs").add({
             "date":selected_date.strftime('%Y年%m月%d日'),
