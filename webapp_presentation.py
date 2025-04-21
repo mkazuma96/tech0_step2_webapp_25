@@ -190,7 +190,7 @@ if mode == "今日の記録を入力する":
     以下は、今日1日の健康状態に関する情報です。この情報を元に、プロの健康管理アドバイザーとして、まず入力内容のサマリを簡単に記載した上で、明日1日を健康的に過ごすためのアドバイスを日本語でください。
     - 日付:{selected_date.strftime('%Y年%m月%d日')}
     - 今日の1日の点数（自己評価）:{day_value}点
-    - 今日の感想（本人による音声の文字起こし）：{edited_day_text}
+    - 今日の感想（本人による音声の文字起こし）：{st.session_state.edited_day_text}
     - 今日の歩数:{step_count}歩
     - 本日の食事:{st.session_state.meal_text}
     """
@@ -221,7 +221,7 @@ if mode == "今日の記録を入力する":
         db.collection("daily_logs").add({
             "date":selected_date.strftime('%Y年%m月%d日'),
             "score":day_value,
-            "emotion_text":edited_day_text,
+            "emotion_text":st.session_state.edited_day_text,
             "steps":step_count,
             "meal_summary":st.session_state.meal_text,
             "advice": st.session_state.advice
