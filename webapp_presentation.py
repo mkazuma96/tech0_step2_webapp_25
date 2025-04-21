@@ -161,6 +161,9 @@ if mode == "今日の記録を入力する":
     #webapp_record.pyの関数を呼び出し
     edited_day_text = record_and_transcribe(client)
 
+    if edited_day_text:
+        st.session_state.edited_day_text = edited_day_text
+
 #ーーーーーーーーーーーーーーーーーーーーーーーーーーー
     ###今日歩いた歩数を入力させる###
 #ーーーーーーーーーーーーーーーーーーーーーーーーーーー
