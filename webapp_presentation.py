@@ -11,21 +11,25 @@ from firebase_admin import credentials
 from firebase_admin import firestore
 from dotenv import load_dotenv
 from firebase_auth import firebase_login, firebase_signup
+import json
 
 
 #.envを呼び出せるようにする
 load_dotenv()
 
-
+#FirebaseのAPIキーを設定
 FIREBASE_API_KEY = os.getenv("FIREBASE_API_KEY")
 
 #Firebaseの初期化（1回だけ）
 if not firebase_admin._apps:
-    cred_path = os.getenv("FIREBASE_CREDENTIAL_PATH")
-#サービスアカウントキーの読み込み
-    cred = credentials.Certificate(cred_path)
-    firebase_admin.initialize_app(cred)
+    try: #まずSecret Managerから読み込む（クラウド環境用）
+        service_account_info = json.loads(st.secrets["FIREBASE_SERVICE_ACCOUNT"])
+        cred = credentials.Certificate(service_account_info)
+    except Exception:#ローカル環境用（サービスアカウントのJSONファイルパスから読む）
+        cred_path = os.getenv("FIREBASE_CREDENTIAL_PATH")
+        cred = credentials.Certificate(cred_path)
 
+    firebase_admin.initialize_app(cred)
 
 # Firebase Authentication用の設定
 firebaseConfig = {
@@ -39,6 +43,7 @@ firebaseConfig = {
 }
 db = firestore.client()
 
+#OpenAI設定
 api_key =os.getenv("OPENAI_API_KEY")
 client = OpenAI(api_key=api_key)
 
