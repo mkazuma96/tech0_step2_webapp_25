@@ -59,14 +59,16 @@ def record_and_transcribe(client, key_name = "recorder_day"):
             st.write("🎙️ 音声の文字起こし結果：")
             st.write(recognized_day_text)
 
-            edited_day_text = st.text_area(
+            if "edited_day_text" not in st.session_state:
+                st.session_state.edited_day_text = recognized_day_text
+
+            st.session_state.edited_day_text = st.text_area(
                 label="文字起こし内容を修正できます：",
-                value=recognized_day_text,
+                value=st.session_state.edited_day_text,
                 height=300
             )
-            st.session_state.edited_day_text = edited_day_text
 
             # ファイル削除
             os.remove(filename_day)
 
-            return edited_day_text
+            return st.session_state.edited_day_text
