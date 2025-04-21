@@ -64,6 +64,7 @@ def record_and_transcribe(client, key_name = "recorder_day"):
                 value=recognized_day_text,
                 height=300
             )
+            st.session_state.edited_day_text = edited_day_text
 
             # ファイル削除
             os.remove(filename_day)
