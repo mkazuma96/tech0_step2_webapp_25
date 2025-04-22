@@ -47,15 +47,6 @@ db = firestore.client()
 api_key =os.getenv("OPENAI_API_KEY")
 client = OpenAI(api_key=api_key)
 
-# ログイン機能の呼び出し
-sidebar_auth()
-
-#ーーーーーーーーーーーーーーーーーーーーーーーーーー
-#UI変更
-#ーーーーーーーーーーーーーーーーーーーーーーーーーーー
-#webapp_ui_codeの関数を呼び出し
-ui_and_transcribe(client)
-
 
 #ーーーーーーーーーーーーーーーーーーーーーーーーーーー
 #ログイン/新規登録UI
@@ -102,6 +93,15 @@ def sidebar_auth():
         st.stop()
     else:
         st.sidebar.success(f"ようこそ！")
+
+# ログイン機能の呼び出し
+sidebar_auth()
+
+#ーーーーーーーーーーーーーーーーーーーーーーーーーー
+#UI変更
+#ーーーーーーーーーーーーーーーーーーーーーーーーーーー
+#webapp_ui_codeの関数を呼び出し
+ui_and_transcribe(client)
 
 
 #ーーーーーーーーーーーーーーーーーーーーーーーーーーー
