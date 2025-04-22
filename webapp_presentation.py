@@ -113,6 +113,13 @@ mode = st.sidebar.selectbox(
 )
 
 if mode == "今日の記録を入力する":
+    #初期化しておく
+    if "edited_day_text" not in st.session_state:
+        st.session_state.edited_day_text = ""
+    if "meal_text" not in st.session_state:
+        st.session_state.meal_text = ""
+
+
     # タイトルと画像を横並びで両脇に配置
     col1, col2 ,col3 = st.columns([1, 3, 1])  # 左画像1：タイトル5 : 右画像1
     with col1:
